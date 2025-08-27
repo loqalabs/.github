@@ -56,4 +56,4 @@ We especially welcome contributions from underrepresented folks in tech — incl
 
 ---
 
-> Founded by [Anna Barnes](https://www.linkedin.com/in/annabethbarnes), a trans software engineer and voice tech enthusiast, LoqaLabs is a love letter to local-first design and the freedom to speak without being surveilled.
+> Founded by [Anna Barnes](https://www.linkedin.com/in/annabethbarnes), a trans software engineer and voice tech enthusiast, Loqa Labs is a love letter to local-first design and the freedom to speak without being surveilled.
