@@ -1,4 +1,4 @@
-# 🧠 LoqaLabs
+# Loqa Labs
 
 **LoqaLabs** is a research-driven, values-first software lab building intelligent local-first systems — with privacy, accessibility, and autonomy at the core.
 
