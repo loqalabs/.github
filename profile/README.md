@@ -1,6 +1,6 @@
 # Loqa Labs
 
-**LoqaLabs** is a research-driven, values-first software lab building intelligent local-first systems — with privacy, accessibility, and autonomy at the core.
+**Loqa Labs** is a research-driven, values-first software lab building intelligent local-first systems — with privacy, accessibility, and autonomy at the core.
 
 We believe the future of computing should respect your boundaries, not just your inputs.
 
@@ -41,7 +41,7 @@ Coming soon:
 
 ## 🤝 Contributing
 
-LoqaLabs is early-stage but welcoming — if you're passionate about local-first systems, privacy, or AI-at-the-edge, come build with us.
+Loqa Labs is early-stage but welcoming — if you're passionate about local-first systems, privacy, or AI-at-the-edge, come build with us.
 
 We especially welcome contributions from underrepresented folks in tech — including trans and queer developers, tinkerers, and dreamers.
 
