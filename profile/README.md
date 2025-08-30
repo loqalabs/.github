@@ -50,13 +50,15 @@ Loqa includes:
 - Extensible skill system (in development)
 - Modular pipeline allows you to build your own voice skills, integrations, and automations
 
-## 🛠️ Other Projects
+## 🧩 Loqa Modules
 
-Coming soon:
-- `loqa-skills`: Starter templates and core skills
-- `loqa-docs`: Public documentation site for developers and users
-- `loqa-puck-esp32`: Embedded wake word firmware for ESP32-S3
-- `loqa-cli`: Command-line tools for configuring and managing your assistant
+Loqa is a modular system made up of several components, each housed in its own repository:
+
+- `loqa` — Project landing page, documentation, and community hub
+- `loqa-hub` — The core backend that handles event routing, STT, LLM, and TTS
+- `loqa-puck-esp32` — Embedded firmware for wake word capture and gRPC streaming
+- `loqa-skills` — Core skill templates and user-defined voice actions *(coming soon)*
+- `loqa-cli` — Command-line tools for configuring and debugging your assistant *(coming soon)*
 
 ## 🤝 Contributing
 
