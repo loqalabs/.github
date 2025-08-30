@@ -41,7 +41,7 @@ To design and develop voice-first and AI-assisted systems that are:
 
 > A local-first **voice platform** that lives on your network, not someone else’s.
 
-[**→ View Repository: `loqa-hub`**](https://github.com/loqalabs/loqa-hub)  
+[**→ View Project Landing Page: `loqa`**](https://github.com/loqalabs/loqa)  
 Loqa includes:
 - Real-time voice processing with Whisper.cpp and Llama 3  
 - gRPC audio capture from ESP32 and Go-based pucks  
