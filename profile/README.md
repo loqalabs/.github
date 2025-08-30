@@ -1,9 +1,22 @@
+
 [![Sponsor](https://img.shields.io/badge/Sponsor-Loqa-ff69b4?logo=githubsponsors&style=for-the-badge)](https://github.com/sponsors/annabarnes1138)
 [![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white&style=for-the-badge)](https://ko-fi.com/annabarnes)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)](LICENSE)
 [![Made with ❤️ by LoqaLabs](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%EF%B8%8F-by%20LoqaLabs-ffb6c1?style=for-the-badge)](https://loqalabs.com)
 
+Looking to support us?  
+→ [GitHub Sponsors](https://github.com/sponsors/annabarnes1138)  
+→ [Ko-fi](https://ko-fi.com/annabarnes)  
+→ [Open Collective](https://opencollective.com/loqalabs) *(coming soon)*
+
+## 🔐 Licensing
+
+All core code is licensed under AGPLv3 to ensure modifications stay open.  
+Commercial licensing available for private deployments or integrations.
+
 # Loqa Labs
+
+> Founded by [Anna Barnes](https://www.linkedin.com/in/annabethbarnes), a trans software engineer and voice tech enthusiast, Loqa Labs is a love letter to local-first design and the freedom to speak without being surveilled.
 
 **Loqa Labs** is a research-driven, values-first software lab building intelligent local-first systems — with privacy, accessibility, and autonomy at the core.
 
@@ -26,7 +39,7 @@ To design and develop voice-first and AI-assisted systems that are:
 
 ## 🗣️ Featured Project: Loqa
 
-> A local-first voice assistant that lives on your network, not someone else’s.
+> A local-first **voice platform** that lives on your network, not someone else’s.
 
 [**→ View Repository: `loqa-hub`**](https://github.com/loqalabs/loqa-hub)  
 Loqa includes:
@@ -35,6 +48,7 @@ Loqa includes:
 - Event-driven architecture with NATS  
 - Fully offline, privacy-first setup  
 - Extensible skill system (in development)
+- Modular pipeline allows you to build your own voice skills, integrations, and automations
 
 ## 🛠️ Other Projects
 
@@ -59,6 +73,12 @@ We especially welcome contributions from underrepresented folks in tech — incl
 - 🌐 Website (coming soon): [loqalabs.com](https://loqalabs.com)  
 - 🐘 Mastodon (coming soon): `@loqa@techhub.social`
 
----
+## 🧭 What's Next
 
-> Founded by [Anna Barnes](https://www.linkedin.com/in/annabethbarnes), a trans software engineer and voice tech enthusiast, Loqa Labs is a love letter to local-first design and the freedom to speak without being surveilled.
+We're actively working on:
+- A visual observability interface (voice command timeline)
+- Tiered architecture for open vs licensed features
+- Community-friendly skill dev experience
+- More robust TTS with natural inflection
+
+Want to help? Reach out or check out our open issues!
