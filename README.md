@@ -141,7 +141,6 @@ jobs:
 - loqa-observer (JavaScript)
 - loqa-device-service (Go)
 - loqa-hub (Go) 
-- loqa-whisper-service (Python)
 - www-loqalabs-com (JavaScript/Static)
 
 ✅ **Recently Optimized:**
