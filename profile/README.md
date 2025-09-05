@@ -43,7 +43,7 @@ To design and develop voice-first and AI-assisted systems that are:
 
 [**→ View Project Landing Page: `loqa`**](https://github.com/loqalabs/loqa)  
 Loqa includes:
-- Real-time voice processing with Whisper.cpp and Llama 3  
+- Real-time voice processing with OpenAI-compatible STT and Llama 3  
 - gRPC audio capture from ESP32 and Go-based pucks  
 - Event-driven architecture with NATS  
 - Fully offline, privacy-first setup  
