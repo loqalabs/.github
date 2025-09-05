@@ -1,0 +1,55 @@
+name: JavaScript CI/CD Pipeline Template (Reusable)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: loqalabs/your-javascript-service  # Change this
+  DIST_DIR: dist
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  test:
+    name: Test & Lint
+    uses: loqalabs/.github/.github/workflows/js/test.yml@main
+    with:
+      node-version: '20'
+    outputs:
+      dist-path: ${{ jobs.test.outputs.dist-path }}
+
+  security:
+    name: Security Analysis
+    uses: loqalabs/.github/.github/workflows/security-scan.yml@main
+    with:
+      language: 'javascript'
+      node-version: '20'
+
+  docker:
+    name: Docker Build and Security
+    needs: [test, security]
+    if: github.event_name != 'pull_request'
+    uses: loqalabs/.github/.github/workflows/docker-build-and-push.yml@main
+    with:
+      registry: docker.io
+      image-name: ${{ env.IMAGE_NAME }}
+    secrets:
+      docker-username: ${{ secrets.DOCKER_USERNAME }}
+      docker-token: ${{ secrets.DOCKER_TOKEN }}
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: loqalabs/.github/.github/workflows/js-deploy-pages.yml@main
+    with:
+      node-version: '20'
+      cname: '' # Optional: set your custom domain here

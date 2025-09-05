@@ -1,0 +1,44 @@
+name: CI/CD Pipeline (Using Reusable Workflows)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: loqalabs/your-python-service  # Change this
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  test:
+    name: Test & Lint
+    uses: loqalabs/.github/.github/workflows/python/test.yml@main
+    with:
+      python-version: '3.11'  # Includes flake8 + mypy + pytest (if available)
+
+  security:
+    name: Security Analysis
+    uses: loqalabs/.github/.github/workflows/security-scan.yml@main
+    with:
+      language: 'python'
+      python-version: '3.11'
+
+  docker:
+    name: Docker Build and Security
+    needs: [test, security]
+    if: github.event_name != 'pull_request'
+    uses: loqalabs/.github/.github/workflows/docker-build-and-push.yml@main
+    with:
+      registry: docker.io
+      image-name: ${{ env.IMAGE_NAME }}
+    secrets:
+      docker-username: ${{ secrets.DOCKER_USERNAME }}
+      docker-token: ${{ secrets.DOCKER_TOKEN }}

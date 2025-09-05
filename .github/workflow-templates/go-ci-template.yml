@@ -1,0 +1,69 @@
+name: Go CI/CD Pipeline Template
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: loqalabs/your-go-service  # Change this
+  BINARY_NAME: your-go-service          # Change this
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  checkout-proto:
+    name: Checkout loqa-proto
+    uses: loqalabs/.github/.github/workflows/go/checkout-proto.yml@main
+
+  test:
+    name: Test
+    uses: loqalabs/.github/.github/workflows/go/test.yml@main
+    needs: [checkout-proto]
+    with:
+      go-version: '1.23.0'
+      proto-repo: 'loqalabs/loqa-proto'
+      coverage-flag: ${{ env.BINARY_NAME }}
+      coverage-name: ${{ env.BINARY_NAME }}
+
+  mod-check:
+    name: Go Mod Tidy & Build Check
+    uses: loqalabs/.github/.github/workflows/go/mod-check.yml@main
+    needs: [checkout-proto]
+    with:
+      go-version: '1.23.0'
+      proto-repo: 'loqalabs/loqa-proto'
+
+  build:
+    name: Build Binary
+    uses: loqalabs/.github/.github/workflows/go/build.yml@main
+    needs: [checkout-proto]
+    with:
+      go-version: '1.23.0'
+      binary-name: ${{ env.BINARY_NAME }}
+
+  security:
+    name: Security Analysis
+    uses: loqalabs/.github/.github/workflows/security-scan.yml@main
+    with:
+      language: 'go'
+      go-version: '1.23.0'
+
+  docker:
+    name: Docker Build and Security
+    needs: [test, security]
+    if: github.event_name != 'pull_request'
+    uses: loqalabs/.github/.github/workflows/docker-build-and-push.yml@main
+    with:
+      registry: ${{ env.REGISTRY }}
+      image-name: ${{ env.IMAGE_NAME }}
+    secrets:
+      docker-username: ${{ secrets.DOCKER_USERNAME }}
+      docker-token: ${{ secrets.DOCKER_TOKEN }}

@@ -1,0 +1,74 @@
+
+
+name: Reusable Spell Check Workflow
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  spell-check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Install aspell
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y aspell aspell-en
+
+    - name: Run spell check
+      run: |
+        # Create custom dictionary for technical terms
+        echo "Loqa
+        gRPC
+        Whisper
+        Ollama
+        NATS
+        ESP32
+        PortAudio
+        HomeKit
+        Zigbee
+        MQTT
+        STT
+        TTS
+        LLM
+        WebSocket
+        microservice
+        backend
+        frontend
+        API
+        APIs
+        JSON
+        YAML
+        Docker
+        Kubernetes
+        localhost
+        middleware
+        runtime
+        blockchain
+        IoT" > .aspell.en.pws
+
+        # Spell check all markdown files
+        find . -name "*.md" -not -path "./node_modules/*" | while read file; do
+          echo "Spell checking $file"
+          # Extract text content, ignore code blocks and URLs
+          cat "$file" | \
+          sed '/^```/,/^```/d' | \
+          sed 's/http[s]\?:\/\/[^ ]*/URL/g' | \
+          sed 's/`[^`]*`/CODE/g' | \
+          aspell --personal=./.aspell.en.pws --lang=en --mode=markdown list | \
+          sort -u > "/tmp/misspelled_$(basename "$file")" || true
+          
+          if [ -s "/tmp/misspelled_$(basename "$file")" ]; then
+            echo "⚠️  Possible misspellings in $file:"
+            cat "/tmp/misspelled_$(basename "$file")"
+          fi
+        done

@@ -1,0 +1,295 @@
+name: Reusable Protocol Buffer Generation
+
+on:
+  workflow_call:
+    inputs:
+      protoc-version:
+        description: 'Protocol Buffer Compiler version'
+        required: false
+        default: '29.3'
+        type: string
+      go-version:
+        description: 'Go version to use'
+        required: false
+        default: '1.23.0'
+        type: string
+      python-version:
+        description: 'Python version to use'
+        required: false
+        default: '3.11'
+        type: string
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '20'
+        type: string
+      languages:
+        description: 'Languages to generate (comma-separated: go,python,javascript)'
+        required: false
+        default: 'go'
+        type: string
+      proto-files:
+        description: 'Proto files to validate (space-separated)'
+        required: false
+        default: '*.proto'
+        type: string
+      generate-script:
+        description: 'Generation script to run'
+        required: false
+        default: './generate.sh'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Protocol Buffers
+    runs-on: ubuntu-latest
+    
+    outputs:
+      languages: ${{ steps.parse-languages.outputs.languages }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Protocol Buffer Compiler
+      uses: arduino/setup-protoc@v3
+      with:
+        version: ${{ inputs.protoc-version }}
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Print protoc version
+      run: protoc --version
+
+    - name: Validate proto files
+      run: |
+        echo "🔍 Validating proto files: ${{ inputs.proto-files }}"
+        for file in ${{ inputs.proto-files }}; do
+          if [[ -f "$file" ]]; then
+            echo "Validating $file"
+            protoc --descriptor_set_out=/dev/null "$file"
+          fi
+        done
+        echo "✅ All proto files validated successfully"
+
+    - name: Parse languages
+      id: parse-languages
+      run: |
+        languages="${{ inputs.languages }}"
+        echo "languages=$languages" >> $GITHUB_OUTPUT
+        echo "📝 Languages to generate: $languages"
+
+  generate-go:
+    name: Generate Go Bindings
+    runs-on: ubuntu-latest
+    needs: validate
+    if: contains(needs.validate.outputs.languages, 'go')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-proto-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-proto-
+          ${{ runner.os }}-go-
+
+    - name: Set up Protocol Buffer Compiler
+      uses: arduino/setup-protoc@v3
+      with:
+        version: ${{ inputs.protoc-version }}
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install protoc-gen-go
+      run: |
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+
+    - name: Generate Go bindings
+      run: |
+        echo "🔄 Generating Go bindings..."
+        ${{ inputs.generate-script }}
+        echo "✅ Go bindings generated"
+
+    - name: Test Go module
+      run: |
+        if [[ -d "go" ]]; then
+          cd go
+          go mod tidy
+          go test ./...
+        fi
+
+    - name: Check for uncommitted changes
+      run: |
+        if [[ -d "go" ]]; then
+          git diff --exit-code go/ || (
+            echo "::error::Go bindings are out of date. Please run ${{ inputs.generate-script }} and commit the result."
+            exit 1
+          )
+        fi
+
+    - name: Upload Go bindings
+      uses: actions/upload-artifact@v4
+      with:
+        name: go-bindings
+        path: go/
+
+  generate-python:
+    name: Generate Python Bindings
+    runs-on: ubuntu-latest
+    needs: validate
+    if: contains(needs.validate.outputs.languages, 'python')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Set up Protocol Buffer Compiler
+      uses: arduino/setup-protoc@v3
+      with:
+        version: ${{ inputs.protoc-version }}
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install Python protobuf
+      run: |
+        python -m pip install --upgrade pip
+        pip install protobuf grpcio-tools
+
+    - name: Generate Python bindings
+      run: |
+        echo "🔄 Generating Python bindings..."
+        mkdir -p python
+        for proto in ${{ inputs.proto-files }}; do
+          if [[ -f "$proto" ]]; then
+            python -m grpc_tools.protoc -I. --python_out=python --grpc_python_out=python "$proto"
+          fi
+        done
+        echo "✅ Python bindings generated"
+
+    - name: Check for uncommitted changes
+      run: |
+        if [[ -d "python" ]]; then
+          git diff --exit-code python/ || (
+            echo "::error::Python bindings are out of date. Please run generation and commit the result."
+            exit 1
+          )
+        fi
+
+    - name: Upload Python bindings
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-bindings
+        path: python/
+
+  generate-javascript:
+    name: Generate JavaScript Bindings
+    runs-on: ubuntu-latest
+    needs: validate
+    if: contains(needs.validate.outputs.languages, 'javascript')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Set up Protocol Buffer Compiler
+      uses: arduino/setup-protoc@v3
+      with:
+        version: ${{ inputs.protoc-version }}
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install protoc plugins
+      run: |
+        mkdir -p javascript
+        cd javascript
+        npm init -y
+        npm install grpc-tools google-protobuf
+
+
+    - name: Generate JavaScript bindings
+      run: |
+        echo "🔄 Generating JavaScript bindings..."
+        mkdir -p javascript
+
+        cd javascript
+        JS_PLUGIN_DIR="$(pwd)/node_modules/.bin"
+        cd ..
+
+        for proto in ${{ inputs.proto-files }}; do
+          if [[ -f "$proto" ]]; then
+            echo "📦 Processing $proto"
+            npx grpc_tools_node_protoc \
+              --js_out=import_style=commonjs,binary:javascript \
+              --grpc_out=grpc_js:javascript \
+              --proto_path=. \
+              "$proto"
+            exit_code=$?
+            if [[ $exit_code -ne 0 ]]; then
+              echo "::error::protoc failed for $proto with exit code $exit_code"
+              exit $exit_code
+            fi
+          fi
+        done
+
+        echo "✅ JavaScript bindings generated"
+
+    - name: Check for uncommitted changes
+      run: |
+        if [[ -d "javascript" ]]; then
+          git diff --exit-code javascript/ || (
+            echo "::error::JavaScript bindings are out of date. Please run generation and commit the result."
+            exit 1
+          )
+        fi
+
+    - name: Upload JavaScript bindings
+      uses: actions/upload-artifact@v4
+      with:
+        name: javascript-bindings
+        path: javascript/
+
+  summary:
+    name: Generation Summary
+    runs-on: ubuntu-latest
+    needs: [validate, generate-go, generate-python, generate-javascript]
+    if: always()
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "📊 Protocol Buffer Generation Summary"
+        echo "===================================="
+        echo "Validation: ${{ needs.validate.result }}"
+        echo "Go bindings: ${{ needs.generate-go.result }}"
+        echo "Python bindings: ${{ needs.generate-python.result }}"
+        echo "JavaScript bindings: ${{ needs.generate-javascript.result }}"
+        echo "===================================="
+        
+        if [[ "${{ needs.validate.result }}" == "success" ]]; then
+          echo "🎉 Protocol buffer generation completed successfully!"
+        else
+          echo "❌ Protocol buffer generation failed"
+          exit 1
+        fi

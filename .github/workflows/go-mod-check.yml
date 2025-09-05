@@ -1,0 +1,64 @@
+
+
+name: Reusable Go Mod Check Workflow
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version to use'
+        required: false
+        default: '1.23.0'
+        type: string
+      proto-repo:
+        description: 'Optional path to checkout loqa-proto'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  mod-check:
+    name: Go Mod Tidy & Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout current repo
+      uses: actions/checkout@v5
+      with:
+        path: repo
+
+    - name: Optionally checkout loqa-proto
+      if: inputs.proto-repo != ''
+      uses: actions/checkout@v5
+      with:
+        repository: loqalabs/loqa-proto
+        path: loqa-proto
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache-dependency-path: repo/go.sum
+
+    - name: Cache Go build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Check Go module is tidy
+      run: |
+        go mod tidy
+        git diff --exit-code || (echo "::error::go.mod/go.sum are not tidy" && exit 1)
+      working-directory: repo
+
+    - name: Verify build
+      run: go build ./...
+      working-directory: repo

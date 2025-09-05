@@ -1,0 +1,77 @@
+
+
+name: Reusable JavaScript Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '20'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, Format, Build, and Upload Dist
+    runs-on: ubuntu-latest
+
+    outputs:
+      dist-path: dist
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate || true
+
+    - name: Run lint
+      run: |
+        if npm run | grep -q "lint"; then
+          npm run lint
+        fi
+
+    - name: Run format check
+      run: |
+        if npm run | grep -q "format:check"; then
+          npm run format:check
+        fi
+
+    - name: Run tests
+      run: |
+        if npm run | grep -q "test"; then
+          npm test
+        fi
+
+    - name: Upload coverage (if present)
+      if: success() && hashFiles('coverage/lcov.info') != ''
+      uses: codecov/codecov-action@v4
+      with:
+        files: coverage/lcov.info
+        name: js-coverage
+
+    - name: Build application
+      run: |
+        if npm run | grep -q "build"; then
+          npm run build
+        fi
+
+    - name: Upload dist folder
+      if: success() && hashFiles('dist/**') != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist

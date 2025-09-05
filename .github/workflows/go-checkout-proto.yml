@@ -1,0 +1,27 @@
+
+
+name: Reusable Checkout Loqa Proto
+
+on:
+  workflow_call:
+    outputs:
+      path:
+        description: 'Path where loqa-proto was checked out'
+        value: 'loqa-proto'
+
+permissions:
+  contents: read
+
+jobs:
+  checkout-proto:
+    name: Checkout loqa-proto
+    runs-on: ubuntu-latest
+    outputs:
+      path: loqa-proto
+
+    steps:
+    - name: Checkout loqa-proto
+      uses: actions/checkout@v5
+      with:
+        repository: loqalabs/loqa-proto
+        path: loqa-proto

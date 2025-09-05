@@ -1,0 +1,115 @@
+name: Reusable Go Test with Hardware Dependencies
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version to use'
+        required: false
+        default: '1.23.0'
+        type: string
+      proto-repo:
+        description: 'Optional path to checkout loqa-proto'
+        required: false
+        default: ''
+        type: string
+      system-packages:
+        description: 'System packages to install (comma-separated)'
+        required: false
+        default: 'portaudio19-dev'
+        type: string
+      working-directory:
+        description: 'Working directory for Go commands'
+        required: false
+        default: '.'
+        type: string
+      coverage-flag:
+        description: 'Codecov flag name'
+        required: false
+        default: 'go-hardware-service'
+        type: string
+      coverage-name:
+        description: 'Codecov upload name'
+        required: false
+        default: 'go-hardware-service'
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  test:
+    name: Go Hardware Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout current repo
+      uses: actions/checkout@v5
+      with:
+        path: repo
+
+    - name: Optionally checkout loqa-proto
+      if: inputs.proto-repo != ''
+      uses: actions/checkout@v5
+      with:
+        repository: ${{ inputs.proto-repo }}
+        path: loqa-proto
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache-dependency-path: repo/${{ inputs.working-directory }}/go.sum
+
+    - name: Cache Go build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-hardware-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-hardware-
+          ${{ runner.os }}-go-
+
+    - name: Install system dependencies
+      if: inputs.system-packages != ''
+      run: |
+        sudo apt-get update
+        IFS=',' read -ra PACKAGES <<< "${{ inputs.system-packages }}"
+        for package in "${PACKAGES[@]}"; do
+          echo "Installing $package..."
+          sudo apt-get install -y "$package"
+        done
+
+    - name: Verify Go version
+      run: go version
+
+    - name: Download Go dependencies
+      run: |
+        cd repo/${{ inputs.working-directory }}
+        go mod download
+
+    - name: Run tests
+      run: |
+        cd repo/${{ inputs.working-directory }}
+        go test -v -race -coverprofile=coverage.out ./...
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        file: ./repo/${{ inputs.working-directory }}/coverage.out
+        flags: ${{ inputs.coverage-flag }}
+        name: ${{ inputs.coverage-name }}
+
+    - name: Run go vet
+      run: |
+        cd repo/${{ inputs.working-directory }}
+        go vet ./...
+
+    - name: Run staticcheck
+      run: |
+        go install honnef.co/go/tools/cmd/staticcheck@v0.5.1
+        cd repo/${{ inputs.working-directory }}
+        staticcheck ./...

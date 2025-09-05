@@ -1,0 +1,227 @@
+name: Reusable Release Creation
+
+on:
+  workflow_call:
+    inputs:
+      release-type:
+        description: 'Type of release (patch, minor, major)'
+        required: false
+        default: 'patch'
+        type: string
+      changelog-file:
+        description: 'Path to changelog file'
+        required: false
+        default: 'CHANGELOG.md'
+        type: string
+      release-notes-header:
+        description: 'Header text for release notes'
+        required: false
+        default: '## What''s Changed'
+        type: string
+      include-commit-list:
+        description: 'Include commit list in release notes'
+        required: false
+        default: true
+        type: boolean
+      pre-release:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+      draft:
+        description: 'Create as draft release'
+        required: false
+        default: false
+        type: string
+      tag-prefix:
+        description: 'Prefix for version tags'
+        required: false
+        default: 'v'
+        type: string
+
+    outputs:
+      release-version:
+        description: 'The version of the created release'
+        value: ${{ jobs.create-release.outputs.version }}
+      release-url:
+        description: 'URL of the created release'
+        value: ${{ jobs.create-release.outputs.url }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      url: ${{ steps.release.outputs.html_url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Determine next version
+      id: version
+      run: |
+        # Get the latest tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "${{ inputs.tag-prefix }}0.0.0")
+        echo "Latest tag: $LATEST_TAG"
+        
+        # Remove prefix to get version
+        LATEST_VERSION=${LATEST_TAG#${{ inputs.tag-prefix }}}
+        echo "Latest version: $LATEST_VERSION"
+        
+        # Parse version components
+        IFS='.' read -ra VERSION_PARTS <<< "$LATEST_VERSION"
+        MAJOR=${VERSION_PARTS[0]:-0}
+        MINOR=${VERSION_PARTS[1]:-0}
+        PATCH=${VERSION_PARTS[2]:-0}
+        
+        # Increment based on release type
+        case "${{ inputs.release-type }}" in
+          major)
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            ;;
+          minor)
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            ;;
+          patch)
+            PATCH=$((PATCH + 1))
+            ;;
+          *)
+            echo "::error::Invalid release type: ${{ inputs.release-type }}"
+            exit 1
+            ;;
+        esac
+        
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        NEW_TAG="${{ inputs.tag-prefix }}$NEW_VERSION"
+        
+        echo "New version: $NEW_VERSION"
+        echo "New tag: $NEW_TAG"
+        
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+    - name: Generate release notes
+      id: release-notes
+      run: |
+        NOTES_FILE="release-notes.md"
+        
+        echo "${{ inputs.release-notes-header }}" > $NOTES_FILE
+        echo "" >> $NOTES_FILE
+        
+        # Get commits since last tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        if [[ -n "$LATEST_TAG" ]]; then
+          echo "### Changes since $LATEST_TAG" >> $NOTES_FILE
+          echo "" >> $NOTES_FILE
+          
+          if [[ "${{ inputs.include-commit-list }}" == "true" ]]; then
+            # Generate commit list
+            git log --pretty=format:"- %s (%h)" ${LATEST_TAG}..HEAD >> $NOTES_FILE
+          else
+            # Just count commits
+            COMMIT_COUNT=$(git rev-list --count ${LATEST_TAG}..HEAD)
+            echo "- $COMMIT_COUNT commits since $LATEST_TAG" >> $NOTES_FILE
+          fi
+        else
+          echo "### Initial Release" >> $NOTES_FILE
+          echo "" >> $NOTES_FILE
+          echo "This is the first release of this project." >> $NOTES_FILE
+        fi
+        
+        echo "" >> $NOTES_FILE
+        echo "---" >> $NOTES_FILE
+        echo "" >> $NOTES_FILE
+        echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${{ steps.version.outputs.tag }}" >> $NOTES_FILE
+        
+        echo "Release notes:"
+        cat $NOTES_FILE
+
+    - name: Check for existing changelog
+      id: changelog
+      run: |
+        if [[ -f "${{ inputs.changelog-file }}" ]]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Changelog file found: ${{ inputs.changelog-file }}"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "No changelog file found at: ${{ inputs.changelog-file }}"
+        fi
+
+    - name: Update changelog
+      if: steps.changelog.outputs.exists == 'true'
+      run: |
+        # Create backup
+        cp "${{ inputs.changelog-file }}" "${{ inputs.changelog-file }}.bak"
+        
+        # Create new changelog entry
+        {
+          echo "# Changelog"
+          echo ""
+          echo "## [${{ steps.version.outputs.version }}] - $(date +%Y-%m-%d)"
+          echo ""
+          sed -n '3,$p' release-notes.md
+          echo ""
+          # Skip the first "# Changelog" line from original
+          tail -n +2 "${{ inputs.changelog-file }}.bak"
+        } > "${{ inputs.changelog-file }}"
+        
+        echo "Updated changelog:"
+        head -20 "${{ inputs.changelog-file }}"
+
+    - name: Commit changelog updates
+      if: steps.changelog.outputs.exists == 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        git add "${{ inputs.changelog-file }}"
+        git commit -m "Update changelog for ${{ steps.version.outputs.version }}" || echo "No changelog changes to commit"
+
+    - name: Create and push tag
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
+        git push origin "${{ steps.version.outputs.tag }}"
+        
+        # Push changelog update if it exists
+        if [[ -f "${{ inputs.changelog-file }}" ]]; then
+          git push origin main || git push origin master || echo "Could not push changelog updates"
+        fi
+
+    - name: Create GitHub release
+      id: release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Release ${{ steps.version.outputs.version }}
+        body_path: release-notes.md
+        draft: ${{ inputs.draft }}
+        prerelease: ${{ inputs.pre-release }}
+        generate_release_notes: false
+
+    - name: Release summary
+      run: |
+        echo "🎉 Release Created Successfully!"
+        echo "================================"
+        echo "Version: ${{ steps.version.outputs.version }}"
+        echo "Tag: ${{ steps.version.outputs.tag }}"
+        echo "Type: ${{ inputs.release-type }}"
+        echo "URL: ${{ steps.release.outputs.html_url }}"
+        echo "Draft: ${{ inputs.draft }}"
+        echo "Pre-release: ${{ inputs.pre-release }}"
+        echo "================================"

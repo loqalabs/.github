@@ -1,0 +1,22 @@
+# .github/workflows/skills/validate-skill.yml
+name: Reusable Validate Skill Workflow
+
+on:
+  workflow_call:
+    inputs:
+      skill:
+        description: Skill directory name
+        required: true
+        type: string
+
+jobs:
+  validate:
+    name: Validate Skill Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Validate skill manifest
+        if: hashFiles(format('{0}/skill.yml', inputs.skill)) != ''
+        run: echo "Found skill manifest in ${{ inputs.skill }}"

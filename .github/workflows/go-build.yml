@@ -1,0 +1,88 @@
+name: Reusable Go Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version to use'
+        required: false
+        default: '1.23.0'
+        type: string
+      binary-name:
+        description: 'Name for the output binary and artifact'
+        required: true
+        type: string
+      working-directory:
+        description: 'Directory where the Go module lives'
+        required: false
+        default: '.'
+        type: string
+      proto-repo:
+        description: 'Optional path to checkout loqa-proto'
+        required: false
+        default: ''
+        type: string
+      system-packages:
+        description: 'System packages to install (comma-separated)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Go Build Binary
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout current repo
+      uses: actions/checkout@v5
+      with:
+        path: repo
+
+    - name: Optionally checkout loqa-proto
+      if: inputs.proto-repo != ''
+      uses: actions/checkout@v5
+      with:
+        repository: ${{ inputs.proto-repo }}
+        path: loqa-proto
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache-dependency-path: ${{ inputs.working-directory == '.' && 'repo/go.sum' || format('repo/{0}/go.sum', inputs.working-directory) }}
+
+    - name: Install system dependencies
+      if: inputs.system-packages != ''
+      run: |
+        sudo apt-get update
+        IFS=',' read -ra PACKAGES <<< "${{ inputs.system-packages }}"
+        for package in "${PACKAGES[@]}"; do
+          echo "Installing $package..."
+          sudo apt-get install -y "$package"
+        done
+
+    - name: Cache Go build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Build Go binary
+      run: |
+        mkdir -p bin
+        go build -v -ldflags="-w -s" -o bin/${{ inputs.binary-name }} ./cmd
+      working-directory: ${{ inputs.working-directory == '.' && 'repo' || format('repo/{0}', inputs.working-directory) }}
+
+    - name: Upload binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.binary-name }}-binary
+        path: ${{ inputs.working-directory == '.' && format('repo/bin/{0}', inputs.binary-name) || format('repo/{0}/bin/{1}', inputs.working-directory, inputs.binary-name) }}
