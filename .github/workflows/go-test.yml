@@ -1,0 +1,87 @@
+
+
+name: Reusable Go Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version to use'
+        required: false
+        default: '1.23.0'
+        type: string
+      proto-repo:
+        description: 'Optional path to checkout loqa-proto'
+        required: false
+        default: ''
+        type: string
+      coverage-flag:
+        description: 'Codecov flag name'
+        required: false
+        default: 'go-service'
+        type: string
+      coverage-name:
+        description: 'Codecov upload name'
+        required: false
+        default: 'go-service'
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  test:
+    name: Go Test
+    runs-on: ubuntu-latest
+
+
+    steps:
+    - name: Checkout current repo
+      uses: actions/checkout@v5
+      with:
+        path: repo
+
+    - name: Optionally checkout loqa-proto
+      if: inputs.proto-repo != ''
+      uses: actions/checkout@v5
+      with:
+        repository: loqalabs/loqa-proto
+        path: loqa-proto
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache-dependency-path: repo/go.sum
+
+    - name: Cache Go build
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.out ./...
+      working-directory: repo
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        files: ./repo/coverage.out
+        flags: ${{ inputs.coverage-flag }}
+        name: ${{ inputs.coverage-name }}
+
+    - name: Run go vet
+      run: go vet ./...
+      working-directory: repo
+
+    - name: Run staticcheck
+      run: |
+        go install honnef.co/go/tools/cmd/staticcheck@v0.5.1
+        staticcheck ./...
+      working-directory: repo

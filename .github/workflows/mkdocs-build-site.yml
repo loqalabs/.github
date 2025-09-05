@@ -1,0 +1,103 @@
+
+
+name: Reusable MkDocs Build Site Workflow
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: 'Name of the artifact to upload'
+        required: false
+        type: string
+        default: 'github-pages'
+
+permissions:
+  contents: read
+
+jobs:
+  build-site:
+    name: Build Static Site
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+
+    - name: Install MkDocs
+      run: |
+        pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+
+    - name: Copy root files to docs directory for MkDocs
+      run: |
+        cp README.md docs/
+        cp TODO.md docs/ 2>/dev/null || echo "TODO.md not found, skipping"
+        cp BACKLOG.md docs/ 2>/dev/null || echo "BACKLOG.md not found, skipping"
+        cp CONTRIBUTING.md docs/ 2>/dev/null || echo "CONTRIBUTING.md not found, skipping"
+        cp CLAUDE.md docs/ 2>/dev/null || echo "CLAUDE.md not found, skipping"
+
+    - name: Create MkDocs configuration
+      run: |
+        cat > mkdocs.yml << EOF
+        site_name: Loqa Documentation
+        site_description: Local-first voice assistant platform
+        site_url: https://loqalabs.github.io/loqa
+
+        theme:
+          name: material
+          palette:
+            - scheme: default
+              primary: deep purple
+              accent: purple
+
+        nav:
+          - Home: README.md
+          - Roadmap:
+            - TODO: TODO.md
+            - Backlog: BACKLOG.md
+          - Getting Started:
+            - Vision: VISION.md
+            - Quick Start: quickstart.md
+            - 5-Minute Setup: getting-started-5min.md
+            - Troubleshooting: troubleshooting.md
+          - Development:
+            - Architecture: architecture.md
+            - Developer Guide: DEVELOPER.md
+            - Configuration: config.md
+            - Messaging: messaging.md
+            - Testing: testing.md
+            - Skills: skills.md
+          - Advanced:
+            - Hardware: hardware.md
+            - Security: security.md
+          - Support:
+            - FAQ: faq.md
+            - Contributing: CONTRIBUTING.md
+
+        plugins:
+          - mermaid2
+
+        markdown_extensions:
+          - admonition
+          - codehilite
+          - pymdownx.superfences:
+              custom_fences:
+                - name: mermaid
+                  class: mermaid
+                  format: !!python/name:mermaid2.fence_mermaid
+        EOF
+
+    - name: Build documentation site
+      run: |
+        mkdocs build --verbose
+
+    - name: Upload site artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: site

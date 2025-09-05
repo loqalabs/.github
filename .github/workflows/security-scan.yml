@@ -1,0 +1,161 @@
+name: Reusable Security Workflow
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: 'Programming language for CodeQL analysis'
+        required: true
+        type: string
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '20'
+      go-version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: '1.23.0'
+      working-directory:
+        description: 'Path to the directory containing go.mod'
+        required: false
+        type: string
+        default: '.'
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      proto-repo:
+        description: 'Optional path to checkout loqa-proto'
+        required: false
+        default: ''
+        type: string
+      system-packages:
+        description: 'System packages to install (comma-separated)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ '${{ inputs.language }}' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Optionally checkout loqa-proto
+        if: inputs.proto-repo != ''
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ inputs.proto-repo }}
+          path: loqa-proto
+
+      - name: Setup Go
+        if: inputs.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache-dependency-path: |
+            go.sum
+        env:
+          GOMODCACHE: ${{ github.workspace }}/.gomodcache
+
+      - name: Install system dependencies
+        if: inputs.system-packages != ''
+        run: |
+          sudo apt-get update
+          IFS=',' read -ra PACKAGES <<< "${{ inputs.system-packages }}"
+          for package in "${PACKAGES[@]}"; do
+            echo "Installing $package..."
+            sudo apt-get install -y "$package"
+          done
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Setup Node.js
+        if: inputs.language == 'javascript'
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Setup Python
+        if: inputs.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install Node.js dependencies
+        if: inputs.language == 'javascript'
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f yarn.lock ]; then
+            yarn install --frozen-lockfile
+          else
+            npm install
+          fi
+
+      - name: Install Python dependencies
+        if: inputs.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Build Node.js application
+        if: inputs.language == 'javascript'
+        run: |
+          if npm run | grep -q "build"; then
+            npm run build
+          fi
+
+      - name: Build Go application
+        if: inputs.language == 'go'
+        working-directory: ${{ inputs.working-directory }}
+        run: go build -v ./...
+        env:
+          GOMODCACHE: ${{ github.workspace }}/.gomodcache
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'

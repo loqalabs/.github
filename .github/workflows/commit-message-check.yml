@@ -1,0 +1,145 @@
+name: Reusable Commit Message Check
+
+on:
+  workflow_call:
+    inputs:
+      ai-attribution-check:
+        description: 'Enable AI tool attribution checking'
+        required: false
+        default: true
+        type: boolean
+      custom-patterns:
+        description: 'Additional regex patterns to check (comma-separated)'
+        required: false
+        default: ''
+        type: string
+      allow-merge-commits:
+        description: 'Allow merge commit messages'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-commit-messages:
+    name: Check Commit Messages
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Get commit messages
+      id: commits
+      run: |
+        # Determine the commit range based on event type
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # For pull requests, use base..head
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          COMMIT_RANGE="${BASE_SHA}..${HEAD_SHA}"
+          echo "📝 Checking PR commits from ${BASE_SHA} to ${HEAD_SHA}"
+        else
+          # For push events, check only the pushed commits
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            # New branch, check only the head commit
+            COMMIT_RANGE="${{ github.sha }}~1..${{ github.sha }}"
+            echo "📝 Checking new branch head commit: ${{ github.sha }}"
+          else
+            # Existing branch, check commits between before and after
+            COMMIT_RANGE="${{ github.event.before }}..${{ github.sha }}"
+            echo "📝 Checking pushed commits from ${{ github.event.before }} to ${{ github.sha }}"
+          fi
+        fi
+        
+        # Get all commit messages in the range
+        COMMITS=$(git log --pretty=format:"%s%n%b" ${COMMIT_RANGE} 2>/dev/null || echo "No commits found")
+        
+        # Save to file for multi-line processing
+        echo "$COMMITS" > /tmp/commit_messages.txt
+        
+        # Count commits
+        COMMIT_COUNT=$(git log --oneline ${COMMIT_RANGE} 2>/dev/null | wc -l || echo "0")
+        echo "commit-count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+        
+        echo "📝 Found $COMMIT_COUNT commit(s) to check"
+
+    - name: Check for AI tool attribution
+      if: inputs.ai-attribution-check == true
+      run: |
+        echo "🔍 Checking for AI tool attribution patterns..."
+        
+        # AI tool attribution patterns
+        AI_PATTERNS="(claude|chatgpt|gpt-|ai generated|copilot|generated with|co-authored-by.*claude|co-authored-by.*gpt)"
+        
+        if grep -i -E "$AI_PATTERNS" /tmp/commit_messages.txt > /dev/null; then
+          echo "❌ AI tool attribution found in commit messages"
+          echo "Please remove AI attribution from commit messages before merging"
+          echo ""
+          echo "Found these potentially problematic patterns:"
+          grep -i -E "$AI_PATTERNS" /tmp/commit_messages.txt || true
+          echo ""
+          echo "💡 Tip: Use 'git rebase -i' to edit commit messages and remove AI attribution"
+          exit 1
+        else
+          echo "✅ No AI tool attribution found in commit messages"
+        fi
+
+    - name: Check custom patterns
+      if: inputs.custom-patterns != ''
+      run: |
+        echo "🔍 Checking for custom patterns..."
+        
+        IFS=',' read -ra PATTERNS <<< "${{ inputs.custom-patterns }}"
+        ISSUES_FOUND=false
+        
+        for pattern in "${PATTERNS[@]}"; do
+          pattern=$(echo "$pattern" | xargs)  # trim whitespace
+          echo "Checking pattern: $pattern"
+          
+          if grep -i -E "$pattern" /tmp/commit_messages.txt > /dev/null; then
+            echo "❌ Found prohibited pattern: $pattern"
+            grep -i -E "$pattern" /tmp/commit_messages.txt || true
+            ISSUES_FOUND=true
+          fi
+        done
+        
+        if [ "$ISSUES_FOUND" = true ]; then
+          echo "❌ Custom pattern violations found in commit messages"
+          exit 1
+        else
+          echo "✅ No custom pattern violations found"
+        fi
+
+    - name: Check merge commits
+      if: inputs.allow-merge-commits == false
+      run: |
+        echo "🔍 Checking for merge commits..."
+        
+        MERGE_COMMITS=$(git log --merges --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+        
+        if [ -n "$MERGE_COMMITS" ]; then
+          echo "❌ Merge commits found in PR:"
+          echo "$MERGE_COMMITS"
+          echo ""
+          echo "💡 Tip: Use 'git rebase' instead of 'git merge' to maintain linear history"
+          exit 1
+        else
+          echo "✅ No merge commits found"
+        fi
+
+    - name: Commit message quality summary
+      run: |
+        echo "📊 Commit Message Quality Report"
+        echo "================================"
+        echo "Total commits: ${{ steps.commits.outputs.commit-count }}"
+        echo "AI attribution check: ${{ inputs.ai-attribution-check == true && '✅ Passed' || '⏭️ Skipped' }}"
+        echo "Custom patterns check: ${{ inputs.custom-patterns != '' && '✅ Passed' || '⏭️ Skipped' }}"
+        echo "Merge commits check: ${{ inputs.allow-merge-commits == false && '✅ Passed' || '⏭️ Skipped' }}"
+        echo "================================"
+        echo "🎉 All commit message checks passed!"

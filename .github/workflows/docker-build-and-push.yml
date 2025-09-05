@@ -1,0 +1,129 @@
+name: Reusable Docker Build, Push, and Scan
+
+on:
+  workflow_call:
+    inputs:
+      registry:
+        description: 'Container registry'
+        required: false
+        type: string
+        default: 'docker.io'
+      image-name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      context:
+        description: 'Build context path'
+        required: false
+        type: string
+        default: '.'
+      dockerfile:
+        description: 'Dockerfile path'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      platforms:
+        description: 'Target platforms'
+        required: false
+        type: string
+        default: 'linux/amd64,linux/arm64'
+    secrets:
+      docker-username:
+        required: true
+      docker-token:
+        required: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  docker:
+    name: Build, Scan and Push Docker Image
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ secrets.docker-username }}
+        password: ${{ secrets.docker-token }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ inputs.registry }}/${{ inputs.image-name }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      id: build
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.dockerfile }}
+        platforms: ${{ inputs.platforms }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        sbom: true
+        provenance: true
+
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ inputs.registry }}/${{ inputs.image-name }}:${{ steps.meta.outputs.version }}
+        format: spdx-json
+        output-file: sbom.spdx.json
+
+    - name: Sanitize artifact name
+      id: sanitize
+      run: |
+        safe_name=$(echo "${{ inputs.image-name }}" | sed 's|/|-|g')
+        echo "name=sbom-$safe_name" >> $GITHUB_OUTPUT
+
+    - name: Upload SBOM
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.sanitize.outputs.name }}
+        path: sbom.spdx.json
+
+    - name: Scan container image with Trivy
+      id: trivy
+      uses: aquasecurity/trivy-action@master
+      continue-on-error: true
+      with:
+        image-ref: ${{ inputs.registry }}/${{ inputs.image-name }}:${{ steps.meta.outputs.version }}
+        format: 'sarif'
+        output: 'container-scan-results.sarif'
+
+    - name: Check for SARIF file
+      run: ls -lh || true
+
+    - name: Upload container scan results
+      if: always() && hashFiles('container-scan-results.sarif') != ''
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'container-scan-results.sarif'
+
+    - name: Run container security benchmark
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ inputs.registry }}/${{ inputs.image-name }}:${{ steps.meta.outputs.version }}
+        format: 'table'
+        exit-code: '0'
