@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Optionally checkout loqa-proto
-        if: inputs.proto-repo != ''
+        if: ${{ inputs.proto-repo != '' }}
         uses: actions/checkout@v5
         with:
           repository: ${{ inputs.proto-repo }}
