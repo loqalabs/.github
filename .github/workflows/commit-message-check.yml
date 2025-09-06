@@ -74,8 +74,8 @@ jobs:
       run: |
         echo "🔍 Checking for AI tool attribution patterns..."
         
-        # AI tool attribution patterns
-        AI_PATTERNS="(claude|chatgpt|gpt-|ai generated|copilot|generated with|co-authored-by.*claude|co-authored-by.*gpt)"
+        # AI tool attribution patterns - specific to attribution, not general mentions
+        AI_PATTERNS="(ai generated|generated with.*claude|generated with.*chatgpt|generated with.*gpt|generated with.*copilot|co-authored-by.*claude|co-authored-by.*gpt|co-authored-by.*ai)"
         
         if grep -i -E "$AI_PATTERNS" /tmp/commit_messages.txt > /dev/null; then
           echo "❌ AI tool attribution found in commit messages"
