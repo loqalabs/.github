@@ -144,7 +144,7 @@ jobs:
 - www-loqalabs-com (JavaScript/Static)
 
 ✅ **Recently Optimized:**
-- loqa-puck (291 lines → 56 lines, 81% reduction)
+- loqa-relay (291 lines → 56 lines, 81% reduction)
 - loqa-proto (274 lines → 82 lines, 70% reduction)
 
 ✅ **All Repositories:** Now use centralized commit-message-check workflow
@@ -238,7 +238,7 @@ All workflows implement security best practices:
 - **100% consistency** in commit message validation
 
 **Major Optimizations:**
-- loqa-puck: 291 → 56 lines (81% reduction)
+- loqa-relay: 291 → 56 lines (81% reduction)
 - loqa-proto: 274 → 82 lines (70% reduction)
 - Commit message workflows: ~100 → 17 lines per repo (85% reduction)
 

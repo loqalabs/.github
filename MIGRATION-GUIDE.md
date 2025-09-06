@@ -256,7 +256,7 @@ jobs:
 
 ### Hardware Dependencies (e.g., PortAudio)
 ```yaml
-# For services like loqa-puck requiring system packages
+# For services like loqa-relay requiring system packages
 test:
   uses: loqalabs/.github/.github/workflows/go-test-with-hardware.yml@main
   with:
