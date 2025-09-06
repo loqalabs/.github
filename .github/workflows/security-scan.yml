@@ -69,10 +69,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ inputs.go-version }}
-          cache-dependency-path: |
-            go.sum
-        env:
-          GOMODCACHE: ${{ github.workspace }}/.gomodcache
+          cache-dependency-path: ${{ inputs.working-directory }}/go.sum
 
       - name: Install system dependencies
         if: inputs.system-packages != ''
@@ -88,6 +85,7 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
 
       - name: Setup Node.js
         if: inputs.language == 'javascript'
@@ -132,8 +130,6 @@ jobs:
         if: inputs.language == 'go'
         working-directory: ${{ inputs.working-directory }}
         run: go build -v ./...
-        env:
-          GOMODCACHE: ${{ github.workspace }}/.gomodcache
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
