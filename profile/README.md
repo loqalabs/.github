@@ -44,7 +44,7 @@ To design and develop voice-first and AI-assisted systems that are:
 [**→ View Project Landing Page: `loqa`**](https://github.com/loqalabs/loqa)  
 Loqa includes:
 - Real-time voice processing with OpenAI-compatible STT and Llama 3  
-- gRPC audio capture from ESP32 and Go-based pucks  
+- gRPC audio capture from ESP32 and Go-based relay devices  
 - Event-driven architecture with NATS  
 - Fully offline, privacy-first setup  
 - Extensible skill system (in development)
@@ -56,7 +56,7 @@ Loqa is a modular system made up of several components, each housed in its own r
 
 - `loqa` — Project landing page, documentation, and community hub
 - `loqa-hub` — The core backend that handles event routing, STT, LLM, and TTS
-- `loqa-puck-esp32` — Embedded firmware for wake word capture and gRPC streaming
+- `loqa-relay-esp32` — Embedded firmware for wake word capture and gRPC streaming
 - `loqa-skills` — Core skill templates and user-defined voice actions *(coming soon)*
 - `loqa-cli` — Command-line tools for configuring and debugging your assistant *(coming soon)*
 
