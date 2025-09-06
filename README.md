@@ -138,7 +138,7 @@ jobs:
 
 ### Current Migration Status
 ✅ **Fully Migrated Repositories:**
-- loqa-observer (JavaScript)
+- loqa-commander (JavaScript)
 - loqa-device-service (Go)
 - loqa-hub (Go) 
 - www-loqalabs-com (JavaScript/Static)
