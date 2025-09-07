@@ -85,3 +85,11 @@ jobs:
         go install honnef.co/go/tools/cmd/staticcheck@v0.5.1
         staticcheck ./...
       working-directory: repo
+
+    - name: Run golangci-lint
+      run: |
+        # Install golangci-lint
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+        # Run linting (will use .golangci.yml if present)
+        golangci-lint run --timeout=5m
+      working-directory: repo
