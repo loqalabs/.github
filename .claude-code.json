@@ -37,11 +37,20 @@
     "testing": "Include appropriate test coverage for changes"
   },
   "repository_context": {
-    "structure": "loqalabs/ contains multiple individual git repositories",
-    "cross_repo_workflow": {
-      "simple_changes": "Make directly to main branch of supporting repos",
-      "complex_changes": "Create matching feature branches across affected repos",
-      "merge_order": "Supporting repos first, primary repo last"
+    "service_role": "GitHub organization configuration - contains .github workflows, templates, and org-level settings",
+    "service_type": "DevOps/CI configuration repository",
+    "affects": "All repositories in the loqalabs organization",
+    "microservice_architecture": {
+      "structure": "Part of loqalabs/ microservice ecosystem - each subfolder is an independent git repository",
+      "peer_services_location": "../ (one folder up from current repo)",
+      "check_before_cloning": "Always check if ../SERVICE_NAME exists before attempting to clone repositories",
+      "github_config_role": "Changes here affect CI/CD, security, and workflows across ALL repositories",
+      "organization_wide_impact": "Workflow and template changes propagate to all repos automatically",
+      "cross_service_changes": {
+        "workflow_updates": "Test changes carefully as they affect all repositories",
+        "template_changes": "Coordinate with team before modifying issue/PR templates",
+        "merge_order": "This repo can be updated independently but test impact across services"
+      }
     }
   },
   "best_practices": [
