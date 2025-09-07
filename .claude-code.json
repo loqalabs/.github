@@ -34,7 +34,16 @@
     "scope_boundaries": "Ask for clarification when scope is unclear",
     "technical_approach": "Propose options when multiple paths exist", 
     "dependencies": "Stop and ask when blockers are found",
-    "testing": "Include appropriate test coverage for changes"
+    "testing": {
+      "coverage_requirements": "Maintain high test coverage for all code changes",
+      "workflow_testing": "Test GitHub Actions workflows and CI/CD pipeline changes",
+      "template_validation": "Validate issue and PR templates across repositories", 
+      "edge_cases": "Test error conditions, boundary values, and failure scenarios",
+      "regression_tests": "Add tests that prevent reoccurrence of fixed bugs",
+      "test_before_commit": "Run existing tests before committing to ensure no breakage",
+      "organization_testing": "Test that workflow changes work across all repositories",
+      "security_testing": "Validate security configurations and access controls"
+    }
   },
   "repository_context": {
     "service_role": "GitHub organization configuration - contains .github workflows, templates, and org-level settings",
