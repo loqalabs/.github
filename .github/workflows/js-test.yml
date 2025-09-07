@@ -50,6 +50,12 @@ jobs:
           npm run format:check
         fi
 
+    - name: Run type check
+      run: |
+        if npm run | grep -q "type-check"; then
+          npm run type-check
+        fi
+
     - name: Run tests
       run: |
         if npm run | grep -q "test"; then
