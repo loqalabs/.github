@@ -34,12 +34,36 @@ Whether you're a company that shares our values or an individual who wants to se
 
 ---
 
-### 🙌 Ways to Support
+### 🙌 Sponsorship Tiers
 
-- [GitHub Sponsors](https://github.com/sponsors/annabarnes1138)
-- [Ko-fi](https://ko-fi.com/annabarnes) (one-time or monthly)
+Support Loqa's mission of privacy-first voice AI with these community-driven tiers:
+
+#### 🏃‍♂️ **Relay Racer** - $5/month
+- Loqa Labs shoutout in monthly changelogs
+- Early access to beta features and releases
+
+#### 🏠 **Homelab Hero** - $15/month  
+- Everything in Relay Racer, plus:
+- Voting rights on roadmap priorities
+- Access to premium skill packs (Q1-Q2 2026)
+
+#### 🎨 **Skill Sculptor** - $50/month
+- Everything in Homelab Hero, plus:
+- Early access to cloud relay and encrypted sync features (Q2 2026) 
+- Discord access for technical discussions
+
+#### 🚀 **Voice Vanguard** - $100/month
+- Everything in Skill Sculptor, plus:
+- Priority support and deployment assistance
+- Co-design input on major architectural decisions
+
+**Every contribution helps sustain privacy-first voice AI development and keeps the OSS core powerful and free.**
+
+#### 💫 **Support Options**
+- [GitHub Sponsors](https://github.com/sponsors/annabarnes1138) - Monthly tiers
+- [Ko-fi](https://ko-fi.com/annabarnes) - One-time or monthly
 - [OpenCollective](https://opencollective.com/loqalabs) *(coming soon)*
-- Or share Loqa with a friend, clinic, or dev community
+- Share Loqa with your dev community, hackerspace, or privacy-focused friends
 
 **Every voice matters. Thank you. 🦋**
 
