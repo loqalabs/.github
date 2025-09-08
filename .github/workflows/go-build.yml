@@ -6,7 +6,7 @@ on:
       go-version:
         description: 'Go version to use'
         required: false
-        default: '1.23.0'
+        default: '1.25.1'
         type: string
       binary-name:
         description: 'Name for the output binary and artifact'
