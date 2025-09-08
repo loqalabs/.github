@@ -1,5 +1,11 @@
 {
   "rules": [
+    "🚨 BLOCKING: NEVER push directly to main branch - ALWAYS create feature branches",
+    "🚨 BLOCKING: ALWAYS create PRs for review - even for CI/template changes",
+    "🚨 BLOCKING: When blocked, ASK - never assume or work around errors",
+    "🚨 GITHUB-CONFIG: Changes here affect ALL repositories' CI/CD workflows",
+    "🚨 IMPACT: Template changes propagate to every service - test thoroughly",
+    "🚨 CI-CRITICAL: Workflow changes can break builds across entire organization",
     "NEVER use AI attribution in commit messages (no 'Generated with Claude Code' or Co-Authored-By lines)",
     "Always read existing files before making changes",
     "Prefer editing existing files over creating new ones when possible",
