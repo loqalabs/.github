@@ -22,8 +22,9 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 
 ```json
 "required_status_checks": [
-  {"context": "Check for AI Tool Attribution", "integration_id": 15368},
-  {"context": "Test", "context": "Build"}
+  {"context": "Check Commit Messages"},
+  {"context": "Test"}, 
+  {"context": "Build"}
 ]
 ```
 
@@ -38,7 +39,7 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 
 ```json
 "required_status_checks": [
-  {"context": "Check for AI Tool Attribution", "integration_id": 15368},
+  {"context": "Check Commit Messages"},
   {"context": "Test & Lint"}
 ]
 ```
@@ -52,7 +53,7 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 
 ```json
 "required_status_checks": [
-  {"context": "Check for AI Tool Attribution", "integration_id": 15368},
+  {"context": "Check Commit Messages"},
   {"context": "Validate Documentation"},
   {"context": "Spell Check"}
 ]
@@ -72,7 +73,7 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 - **Thread Resolution**: Not required (allows merge with unresolved discussions)
 
 ### Security Requirements
-- **AI Tool Attribution**: Required across all repositories for transparency
+- **Commit Message Validation**: Required across all repositories (includes AI attribution checks)
 - **Signed Commits**: All commits must be cryptographically signed
 - **Security Scans**: Run via scheduled workflows (not blocking CI)
 
