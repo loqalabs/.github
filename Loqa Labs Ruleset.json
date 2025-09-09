@@ -46,6 +46,12 @@
           {
             "context": "Check for AI Tool Attribution",
             "integration_id": 15368
+          },
+          {
+            "context": "Test"
+          },
+          {
+            "context": "Build"
           }
         ]
       }
