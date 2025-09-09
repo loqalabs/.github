@@ -39,14 +39,16 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 
 ```json
 "required_status_checks": [
-  {"context": "Commit Check / Check Commit Messages"},
+  {"context": "Check Commit Messages / Check Commit Messages"},
   {"context": "Test & Lint / Lint, Format, Build, and Upload Dist"}
 ]
 ```
 
 **Repository-Specific Variations**:
-- `loqa-commander`: `"Commit Check / Check Commit Messages"`, `"Test & Lint / Lint, Format, Build, and Upload Dist"`
-- `www-loqalabs-com`: `"Commit Check / Check Commit Messages"`, `"Test & Build / Lint, Format, Build, and Upload Dist"`
+- `loqa-commander`: `"Check Commit Messages / Check Commit Messages"`, `"Test & Lint / Lint, Format, Build, and Upload Dist"`
+- `www-loqalabs-com`: `"Check Commit Messages / Check Commit Messages"`, `"Test & Build / Lint, Format, Build, and Upload Dist"`
+
+**Note**: JavaScript services use reusable workflows where the status check format reflects the job name from both the calling workflow and the reusable workflow, resulting in the duplicated "Check Commit Messages" format.
 
 ### Documentation Repositories
 **Repositories**: `loqa`
@@ -119,4 +121,6 @@ When modifying CI workflows:
 
 ### Status Check Format:
 - **Simple workflows**: Use workflow name directly (e.g., "Commit Check")
-- **Reusable workflows**: Use "WorkflowName / JobName" format (e.g., "Commit Check / Check Commit Messages")
+- **Reusable workflows**: Use "JobName / ReusableWorkflowJobName" format (e.g., "Check Commit Messages / Check Commit Messages")
+
+**Important**: For reusable workflows, GitHub creates status check names based on the job name in the calling workflow and the job name in the reusable workflow, not the workflow names themselves.
