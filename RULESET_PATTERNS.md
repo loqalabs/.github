@@ -22,38 +22,38 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 
 ```json
 "required_status_checks": [
-  {"context": "Check Commit Messages"},
+  {"context": "Commit Check"},
   {"context": "Test"}, 
   {"context": "Build"}
 ]
 ```
 
 **Repository-Specific Variations**:
-- `loqa-hub`: `"Test"`, `"Build"`
-- `loqa-relay`: `"Test Go Client"`, `"Build Go Client"`
-- `loqa-skills`: `"Validate Skills"`, `"Test Skills"`
-- `loqa-proto`: `"Generate Protocol Buffer Bindings"`
+- `loqa-hub`: `"Commit Check"`, `"Test"`, `"Build"`
+- `loqa-relay`: `"Commit Check"`, `"Test Go Client"`, `"Build Go Client"`
+- `loqa-skills`: `"Commit Check"`, `"Validate Skills"`, `"Test Skills"`
+- `loqa-proto`: `"Commit Check"`, `"Generate Protocol Buffer Bindings"`
 
 ### JavaScript Services
 **Repositories**: `loqa-commander`, `www-loqalabs-com`
 
 ```json
 "required_status_checks": [
-  {"context": "Check Commit Messages"},
-  {"context": "Test & Lint"}
+  {"context": "Commit Check / Check Commit Messages"},
+  {"context": "Test & Lint / Lint, Format, Build, and Upload Dist"}
 ]
 ```
 
 **Repository-Specific Variations**:
-- `loqa-commander`: `"Test & Lint"`
-- `www-loqalabs-com`: `"Test & Build"`
+- `loqa-commander`: `"Commit Check / Check Commit Messages"`, `"Test & Lint / Lint, Format, Build, and Upload Dist"`
+- `www-loqalabs-com`: `"Commit Check / Check Commit Messages"`, `"Test & Build / Lint, Format, Build, and Upload Dist"`
 
 ### Documentation Repositories
 **Repositories**: `loqa`
 
 ```json
 "required_status_checks": [
-  {"context": "Check Commit Messages"},
+  {"context": "Commit Check"},
   {"context": "Validate Documentation"},
   {"context": "Spell Check"}
 ]
@@ -73,9 +73,9 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 - **Thread Resolution**: Not required (allows merge with unresolved discussions)
 
 ### Security Requirements
-- **Commit Message Validation**: Required across all repositories (includes AI attribution checks)
+- **Commit Message Validation**: Required across all repositories using standardized "Commit Check" workflow name (includes AI attribution checks)
 - **Signed Commits**: All commits must be cryptographically signed
-- **Security Scans**: Run via scheduled workflows (not blocking CI)
+- **Security Scans**: Run via scheduled workflows using standardized "Security Scan" workflow name (not blocking CI)
 
 ## Emergency Override Procedures
 
@@ -87,9 +87,12 @@ All repositories use the "Loqa Labs Ruleset" with these consistent rules:
 
 ## Implementation Status
 
-✅ **Implemented** (as of 2025-09-08):
+✅ **Implemented** (as of 2025-09-09):
 - All 7 repositories have updated rulesets with comprehensive quality gates
-- Repository-specific status checks match actual CI workflow job names
+- Repository-specific status checks match standardized CI workflow names:
+  - **"Commit Check"** (was "Check Commit Messages") 
+  - **"CI/CD"** workflows (was various CI/CD Pipeline names)
+  - **"Security Scan"** workflows (was "Security Scanning")
 - Consistent base protection rules across entire organization
 - Emergency bypass capabilities preserved
 
@@ -102,6 +105,18 @@ When adding new repositories:
 4. Test ruleset with sample PR before enabling enforcement
 
 When modifying CI workflows:
-1. Update required status checks in repository ruleset
-2. Ensure job names in workflows match status check contexts  
-3. Test changes in feature branch before merging to main
+1. Follow standardized workflow naming convention: "CI/CD", "Commit Check", "Security Scan"
+2. Update required status checks in repository ruleset to match workflow changes
+3. Ensure job names in workflows match status check contexts (use full format for reusable workflows)
+4. Test changes in feature branch before merging to main
+
+## Workflow Name Standards
+
+### Standardized Workflow Names (as of 2025-09-09):
+- **CI/CD** - Main build, test, and deployment workflows
+- **Commit Check** - Commit message validation (includes AI attribution checks)  
+- **Security Scan** - Scheduled security scanning (weekly, non-blocking)
+
+### Status Check Format:
+- **Simple workflows**: Use workflow name directly (e.g., "Commit Check")
+- **Reusable workflows**: Use "WorkflowName / JobName" format (e.g., "Commit Check / Check Commit Messages")
