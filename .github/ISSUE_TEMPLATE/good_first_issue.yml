@@ -1,0 +1,237 @@
+name: 🌟 Good First Issue
+description: Suggest an issue that would be perfect for new contributors
+title: "[Good First Issue]: "
+labels: ["good first issue", "help wanted", "newcomer-friendly"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us create more opportunities for new contributors! This template helps identify and structure issues that are perfect for people new to the project.
+
+  - type: textarea
+    id: issue_description
+    attributes:
+      label: Issue Description
+      description: Clearly describe the issue or task
+      placeholder: |
+        What needs to be done? Be specific and clear.
+        
+        Good examples:
+        - "Add missing JSDoc comments to utility functions in src/utils/"
+        - "Create example skill for controlling smart lights"
+        - "Fix typos and improve clarity in the getting started guide"
+        - "Add unit tests for the AudioProcessor class"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue_category
+    attributes:
+      label: Category
+      description: What type of work is this?
+      options:
+        - Documentation
+        - Bug Fix (Simple)
+        - Testing
+        - Code Cleanup/Refactoring
+        - UI/UX Improvement
+        - Example/Tutorial Creation
+        - Translation
+        - Accessibility
+        - Configuration/Setup
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: skill_level
+    attributes:
+      label: Required Skill Level
+      description: What level of experience is needed?
+      options:
+        - Beginner - No prior experience needed
+        - Beginner+ - Basic programming knowledge helpful
+        - Intermediate - Some experience with the technology stack
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: technologies
+    attributes:
+      label: Technologies Involved
+      description: What technologies will a contributor work with?
+      options:
+        - label: Go programming
+        - label: JavaScript/TypeScript
+        - label: Vue.js
+        - label: HTML/CSS
+        - label: Docker
+        - label: Protocol Buffers
+        - label: Markdown documentation
+        - label: YAML configuration
+        - label: Shell scripting
+        - label: No programming required
+
+  - type: textarea
+    id: context_background
+    attributes:
+      label: Context & Background
+      description: Provide context to help new contributors understand why this matters
+      placeholder: |
+        - Why is this issue important?
+        - How does it fit into the bigger picture?
+        - What impact will solving this have?
+        - Are there any relevant background resources to understand the domain?
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Clear criteria for when this issue is considered complete
+      placeholder: |
+        Be specific about what "done" looks like:
+        
+        - [ ] Specific deliverable 1
+        - [ ] Specific deliverable 2  
+        - [ ] All tests pass
+        - [ ] Documentation updated (if applicable)
+        - [ ] Example added (if applicable)
+    validations:
+      required: true
+
+  - type: textarea
+    id: getting_started
+    attributes:
+      label: Getting Started Guide
+      description: Step-by-step instructions for new contributors
+      placeholder: |
+        Help newcomers know exactly how to start:
+        
+        1. **Setup**: What do they need to install or configure?
+        2. **Location**: Where in the codebase should they look?
+        3. **Resources**: What files, docs, or examples should they review?
+        4. **First Steps**: What should they do first?
+        5. **Testing**: How can they test their changes?
+        
+        Example:
+        1. Follow the [development setup guide](link)
+        2. Look at the files in `src/components/`
+        3. Review existing component examples in `examples/`
+        4. Start by creating a new file based on the template
+        5. Test your component with `npm run dev`
+    validations:
+      required: true
+
+  - type: textarea
+    id: helpful_resources
+    attributes:
+      label: Helpful Resources
+      description: Links and resources to help contributors succeed
+      placeholder: |
+        - Relevant documentation links
+        - Similar examples they can reference
+        - Tutorials or guides for the technologies involved
+        - Contact information for getting help
+        
+        Example:
+        - [Vue.js Component Guide](https://vuejs.org/guide/components/)
+        - [Example similar component](link-to-file)
+        - [Our Discord #help channel](https://discord.gg/loqa)
+        - Ping @maintainer for questions about this area
+
+  - type: dropdown
+    id: estimated_time
+    attributes:
+      label: Estimated Time Investment
+      description: How long should this take for a new contributor?
+      options:
+        - 1-2 hours
+        - 2-4 hours
+        - 4-8 hours
+        - 1-2 days
+        - Less than 1 hour
+    validations:
+      required: true
+
+  - type: textarea
+    id: mentorship_notes
+    attributes:
+      label: Mentorship & Support Notes
+      description: What kind of support should we provide to contributors working on this?
+      placeholder: |
+        - What areas might new contributors need guidance on?
+        - Are there common mistakes or gotchas to watch for?
+        - What level of code review/feedback should we provide?
+        - Should we pair program or have check-ins?
+        
+        This helps maintainers provide the right level of support.
+
+  - type: checkboxes
+    id: newcomer_friendly_aspects
+    attributes:
+      label: What makes this newcomer-friendly?
+      description: Check all that apply
+      options:
+        - label: Clear, well-defined scope
+        - label: No complex architectural knowledge required
+        - label: Good examples to reference
+        - label: Minimal dependencies on other work
+        - label: Easy to test and validate changes
+        - label: Good learning opportunity
+        - label: Mistakes are easily reversible
+        - label: Clear success criteria
+
+  - type: textarea
+    id: learning_outcomes
+    attributes:
+      label: Learning Outcomes
+      description: What will contributors learn by working on this issue?
+      placeholder: |
+        What skills or knowledge will someone gain?
+        
+        Examples:
+        - "Learn how to write Vue.js components"
+        - "Understand Go testing patterns"
+        - "Practice writing clear documentation"
+        - "Experience with open source contribution workflow"
+
+  - type: checkboxes
+    id: issue_preparation
+    attributes:
+      label: Issue Preparation Checklist
+      description: Confirm this issue is ready for new contributors
+      options:
+        - label: The scope is clearly defined and limited
+          required: true
+        - label: Success criteria are specific and measurable
+          required: true
+        - label: Getting started instructions are complete
+          required: true
+        - label: Necessary resources and examples are linked
+          required: true
+        - label: A maintainer is available to provide support
+          required: true
+        - label: This work can be done independently of other ongoing work
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 🎯 Making Great First Issues
+        
+        **Great first issues have:**
+        - **Clear scope** - New contributors know exactly what to do
+        - **Good examples** - Similar work they can reference
+        - **Learning value** - Contributors gain useful skills
+        - **Support available** - Maintainers ready to help
+        - **Low risk** - Mistakes won't break critical functionality
+        
+        **After creating this issue:**
+        1. **Tag it properly** - Automation will add appropriate labels
+        2. **Share in Discord** - Let the community know about new opportunities
+        3. **Be responsive** - Reply to questions and provide guidance
+        4. **Celebrate completion** - Recognize successful contributions!
+        
+        **Questions?** Join our [Discord #contributors channel](https://discord.gg/loqa) for real-time discussion!

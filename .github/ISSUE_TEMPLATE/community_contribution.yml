@@ -1,0 +1,192 @@
+name: 🤝 Community Contribution
+description: Propose a community-driven feature, improvement, or initiative
+title: "[Community]: "
+labels: ["community", "enhancement", "help wanted"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing a community contribution! This template helps us understand and support community-driven initiatives.
+
+  - type: dropdown
+    id: contribution_type
+    attributes:
+      label: Contribution Type
+      description: What type of contribution are you proposing?
+      options:
+        - New Feature Implementation
+        - Documentation Improvement
+        - Community Tool/Resource
+        - Educational Content
+        - Testing & Quality Assurance
+        - Accessibility Enhancement
+        - Performance Optimization
+        - Integration/Plugin
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal Description
+      description: Describe your proposed contribution in detail
+      placeholder: |
+        What do you want to contribute? Why is it valuable for the community?
+        
+        Examples:
+        - "Create a comprehensive tutorial for building custom voice skills"
+        - "Implement dark mode for the Commander interface"
+        - "Add support for additional TTS voices"
+        - "Improve accessibility compliance across the web interface"
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation & Use Cases
+      description: Why is this contribution needed? What problems does it solve?
+      placeholder: |
+        - What problem does this solve for users/contributors?
+        - Who would benefit from this contribution?
+        - How does this align with Loqa's values and goals?
+        - Are there specific use cases or scenarios this addresses?
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: Proposed Approach
+      description: How do you plan to implement this contribution?
+      placeholder: |
+        - What's your technical approach or methodology?
+        - What resources or dependencies are needed?
+        - Are there any alternative approaches to consider?
+        - Do you need any guidance or collaboration from maintainers?
+
+  - type: dropdown
+    id: experience_level
+    attributes:
+      label: Your Experience Level
+      description: How would you describe your experience with this type of contribution?
+      options:
+        - Beginner - New to this area, would appreciate guidance
+        - Intermediate - Some experience, comfortable with basics
+        - Advanced - Experienced, comfortable leading the effort
+        - Expert - Extensive experience, can mentor others
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: repository_scope
+    attributes:
+      label: Repository Scope
+      description: Which repositories would be affected by this contribution?
+      options:
+        - label: loqa-hub (Core service)
+        - label: loqa-commander (Web dashboard)
+        - label: loqa-relay (Audio client)
+        - label: loqa-skills (Plugin system)
+        - label: loqa-proto (Protocol definitions)
+        - label: www-loqalabs-com (Website)
+        - label: loqalabs-github-config (Automation/tools)
+        - label: Documentation only
+        - label: External/community resources
+
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Proposed Timeline
+      description: What's your estimated timeline for this contribution?
+      placeholder: |
+        - When could you start working on this?
+        - What's a reasonable timeline for completion?
+        - Are there any constraints or dependencies that affect timing?
+        - Would you prefer to work in phases or deliver everything at once?
+
+  - type: dropdown
+    id: collaboration
+    attributes:
+      label: Collaboration Preference
+      description: How would you like to collaborate on this contribution?
+      options:
+        - Solo work with periodic check-ins
+        - Collaborative development with other contributors
+        - Mentorship - need guidance from experienced contributors
+        - Leadership - willing to coordinate with other contributors
+        - Open to any collaboration style
+    validations:
+      required: true
+
+  - type: textarea
+    id: support_needed
+    attributes:
+      label: Support Needed
+      description: What kind of support would help you succeed with this contribution?
+      placeholder: |
+        - Technical guidance on specific areas?
+        - Access to resources or documentation?
+        - Code review and feedback during development?
+        - Help with testing or validation?
+        - Community feedback on design decisions?
+        - Mentorship or pairing opportunities?
+
+  - type: checkboxes
+    id: community_impact
+    attributes:
+      label: Community Impact
+      description: How do you see this contribution benefiting the community?
+      options:
+        - label: Makes Loqa easier to use for new users
+        - label: Improves developer experience for contributors
+        - label: Enhances accessibility and inclusion
+        - label: Adds functionality users have requested
+        - label: Improves performance or reliability
+        - label: Strengthens privacy and security
+        - label: Enables new use cases or integrations
+        - label: Improves documentation and learning resources
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any additional information that would help us understand and support your contribution
+      placeholder: |
+        - Links to related discussions, issues, or resources
+        - Examples from other projects or communities
+        - Specific requirements or constraints to consider
+        - Questions or concerns about the contribution process
+
+  - type: checkboxes
+    id: contributor_agreement
+    attributes:
+      label: Contributor Agreement
+      description: Please confirm your understanding of the contribution process
+      options:
+        - label: I understand this is a volunteer contribution to an open source project
+          required: true
+        - label: I'm committed to following the project's Code of Conduct
+          required: true
+        - label: I'm willing to work collaboratively and accept feedback
+          required: true
+        - label: I understand that accepted contributions become part of the project under its license
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 🎉 Thank You!
+        
+        Community contributions are the heart of Loqa! Once you submit this proposal:
+        
+        1. **Community Review**: We'll review and provide feedback within 48 hours
+        2. **Planning Discussion**: We'll help refine the approach and timeline
+        3. **Mentorship Assignment**: New contributors get paired with experienced mentors
+        4. **Implementation Support**: Ongoing guidance and code review throughout development
+        5. **Recognition**: Successful contributions are celebrated and recognized!
+        
+        **Need help or have questions?** Join our [Discord community](https://discord.gg/loqa) for real-time support!
+        
+        **Want to browse other community contributions?** Check out issues labeled [`community`](https://github.com/search?q=org%3Aloqalabs+label%3A%22community%22+state%3Aopen&type=issues) and [`help wanted`](https://github.com/search?q=org%3Aloqalabs+label%3A%22help+wanted%22+state%3Aopen&type=issues).
