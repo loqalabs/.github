@@ -18,16 +18,31 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
+      with:
+        fetch-depth: 0  # Needed for changed files detection
+
+    - name: Cache aspell and dictionary
+      uses: actions/cache@v4
+      id: cache-aspell
+      with:
+        path: |
+          /usr/bin/aspell
+          /usr/share/aspell
+          ~/.aspell.en.pws
+        key: aspell-cache-${{ runner.os }}-v1
 
     - name: Install aspell
+      if: steps.cache-aspell.outputs.cache-hit != 'true'
       run: |
         sudo apt-get update
         sudo apt-get install -y aspell aspell-en
 
-    - name: Run spell check
+    - name: Create custom dictionary
       run: |
-        # Create custom dictionary for technical terms
-        echo "Loqa
+        # Create custom dictionary for technical terms (optimized single operation)
+        cat > .aspell.en.pws << 'EOF'
+        personal_ws-1.1 en 50 
+        Loqa
         gRPC
         Whisper
         Ollama
@@ -54,21 +69,109 @@ jobs:
         middleware
         runtime
         blockchain
-        IoT" > .aspell.en.pws
+        IoT
+        GitLab
+        GitHub
+        ChatGPT
+        OpenAI
+        AI
+        ML
+        UUID
+        CLI
+        UI
+        UX
+        DevOps
+        SQLite
+        PostgreSQL
+        MySQL
+        Redis
+        Grafana
+        Prometheus
+        Debian
+        Ubuntu
+        EOF
 
-        # Spell check all markdown files
-        find . -name "*.md" -not -path "./node_modules/*" | while read file; do
-          echo "Spell checking $file"
-          # Extract text content, ignore code blocks and URLs
-          cat "$file" | \
-          sed '/^```/,/^```/d' | \
-          sed 's/http[s]\?:\/\/[^ ]*/URL/g' | \
-          sed 's/`[^`]*`/CODE/g' | \
-          aspell --personal=./.aspell.en.pws --lang=en --mode=markdown list | \
-          sort -u > "/tmp/misspelled_$(basename "$file")" || true
-          
-          if [ -s "/tmp/misspelled_$(basename "$file")" ]; then
-            echo "⚠️  Possible misspellings in $file:"
-            cat "/tmp/misspelled_$(basename "$file")"
+    - name: Get changed markdown files
+      id: changed-files
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # For PRs, check files changed from base branch
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.md$' | grep -v node_modules || true)
+        else
+          # For pushes, check files changed in last commit
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '\.md$' | grep -v node_modules || true)
+        fi
+        
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No markdown files changed, skipping spell check"
+          echo "changed_files=" >> $GITHUB_OUTPUT
+          echo "skip=true" >> $GITHUB_OUTPUT
+        else
+          echo "Found changed markdown files:"
+          echo "$CHANGED_FILES"
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache spell check results
+      if: steps.changed-files.outputs.skip != 'true'
+      uses: actions/cache@v4
+      with:
+        path: .spell-check-cache
+        key: spell-check-${{ hashFiles('**/*.md') }}-v2
+        restore-keys: |
+          spell-check-${{ hashFiles('**/*.md') }}-
+          spell-check-
+
+    - name: Run optimized spell check
+      if: steps.changed-files.outputs.skip != 'true'
+      run: |
+        mkdir -p .spell-check-cache
+        ERROR_COUNT=0
+        
+        # Process only changed files
+        echo "${{ steps.changed-files.outputs.changed_files }}" | while IFS= read -r file; do
+          if [ -n "$file" ] && [ -f "$file" ]; then
+            echo "🔍 Spell checking $file"
+            
+            # Generate cache key for this file
+            CACHE_KEY=$(echo "$file" | md5sum | cut -d' ' -f1)
+            CACHE_FILE=".spell-check-cache/$CACHE_KEY"
+            FILE_HASH=$(md5sum "$file" | cut -d' ' -f1)
+            
+            # Check if we have cached results for this file
+            if [ -f "$CACHE_FILE" ] && [ "$(head -n1 "$CACHE_FILE")" = "$FILE_HASH" ]; then
+              echo "✅ Using cached results for $file"
+              CACHED_ERRORS=$(tail -n +2 "$CACHE_FILE")
+              if [ -n "$CACHED_ERRORS" ]; then
+                echo "⚠️  Cached misspellings in $file:"
+                echo "$CACHED_ERRORS"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              fi
+            else
+              echo "🔄 Spell checking $file (not cached)"
+              
+              # Optimized text extraction and spell checking
+              MISSPELLED=$(cat "$file" | \
+                sed -E '/^```/,/^```/d' | \
+                sed -E 's/https?:\/\/[^\s)]+//g' | \
+                sed -E 's/`[^`]*`//g' | \
+                sed -E 's/\[[^\]]*\]\([^)]*\)//g' | \
+                aspell --personal=./.aspell.en.pws --lang=en --mode=markdown list | \
+                sort -u || true)
+              
+              # Cache the results
+              echo "$FILE_HASH" > "$CACHE_FILE"
+              if [ -n "$MISSPELLED" ]; then
+                echo "$MISSPELLED" >> "$CACHE_FILE"
+                echo "⚠️  Possible misspellings in $file:"
+                echo "$MISSPELLED"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              fi
+            fi
           fi
         done
+        
+        echo "✅ Spell check completed. Processing complete."
