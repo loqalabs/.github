@@ -1,0 +1,80 @@
+name: 'Cross-Repository Notification'
+description: 'Send notifications to related repositories about important changes'
+inputs:
+  github-token:
+    description: 'GitHub token with cross-repo permissions'
+    required: true
+  notification-type:
+    description: 'Type of notification (breaking-change, security, milestone)'
+    required: true
+  target-repos:
+    description: 'Comma-separated list of target repositories'
+    required: true
+  message:
+    description: 'Notification message'
+    required: true
+  issue-number:
+    description: 'Source issue number'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send cross-repository notifications
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        IFS=',' read -ra REPOS <<< "${{ inputs.target-repos }}"
+        
+        for repo in "${REPOS[@]}"; do
+          # Skip if same repository
+          if [ "$repo" = "${{ github.event.repository.name }}" ]; then
+            continue
+          fi
+          
+          # Construct notification message
+          case "${{ inputs.notification-type }}" in
+            "breaking-change")
+              title="[BREAKING CHANGE] Impact from ${{ github.event.repository.name }}"
+              label="breaking-change,cross-repo,urgent"
+              ;;
+            "security")
+              title="[SECURITY] Security issue in ${{ github.event.repository.name }}"
+              label="security,cross-repo,critical"
+              ;;
+            "milestone")
+              title="[MILESTONE] Coordination needed for ${{ github.event.repository.name }}"
+              label="milestone,cross-repo,coordination"
+              ;;
+            *)
+              title="[NOTIFICATION] Update from ${{ github.event.repository.name }}"
+              label="cross-repo,notification"
+              ;;
+          esac
+          
+          # Create notification issue using GitHub CLI
+          gh issue create \
+            --repo "loqalabs/$repo" \
+            --title "$title" \
+            --body "${{ inputs.message }}
+
+---
+**Source**: ${{ github.event.repository.name }}#${{ inputs.issue-number }}
+**Type**: ${{ inputs.notification-type }}
+**Generated**: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+This is an automated cross-repository notification." \
+            --label "$label" \
+            --assignee "annabarnes1138" || echo "Failed to create issue in $repo"
+          
+          echo "✅ Notification sent to $repo"
+        done
+
+    - name: Log notification summary
+      shell: bash
+      run: |
+        echo "Cross-repository notifications completed"
+        echo "Type: ${{ inputs.notification-type }}"
+        echo "Target repositories: ${{ inputs.target-repos }}"
+        echo "Source issue: ${{ github.event.repository.name }}#${{ inputs.issue-number }}"
