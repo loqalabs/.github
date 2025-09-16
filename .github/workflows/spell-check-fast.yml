@@ -1,0 +1,91 @@
+name: Fast Spell Check Workflow
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  spell-check:
+    name: Fast Spell Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Get changed markdown files
+      id: changed-files
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # For PRs, check files changed from base branch
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E '\.(md|rst|txt)$' | grep -v node_modules || true)
+        else
+          # For pushes, check files changed in last commit
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(md|rst|txt)$' | grep -v node_modules || true)
+        fi
+
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No documentation files changed, skipping spell check"
+          echo "changed_files=" >> $GITHUB_OUTPUT
+          echo "skip=true" >> $GITHUB_OUTPUT
+        else
+          echo "Found changed documentation files:"
+          echo "$CHANGED_FILES"
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create cspell configuration
+      if: steps.changed-files.outputs.skip != 'true'
+      run: |
+        cat > cspell.json << 'EOF'
+        {
+          "version": "0.2",
+          "language": "en",
+          "words": [
+            "Loqa", "gRPC", "Whisper", "Ollama", "NATS", "ESP32", "PortAudio",
+            "HomeKit", "Zigbee", "MQTT", "STT", "TTS", "LLM", "WebSocket",
+            "microservice", "backend", "frontend", "API", "APIs", "JSON", "YAML",
+            "Docker", "Kubernetes", "localhost", "middleware", "runtime",
+            "blockchain", "IoT", "GitLab", "GitHub", "ChatGPT", "OpenAI", "AI", "ML",
+            "UUID", "CLI", "UI", "UX", "DevOps", "SQLite", "PostgreSQL", "MySQL",
+            "Redis", "Grafana", "Prometheus", "Debian", "Ubuntu", "mkdocs",
+            "Tailwind", "Vue", "Vite", "Pinia", "ESLint", "Prettier", "TypeScript",
+            "gitleaks", "trivy", "gosec", "govulncheck", "codeql", "sarif",
+            "Kokoro", "AGPL", "copyleft", "homelab", "Raspberry", "Piper", "Dia",
+            "Moshi", "SeamlessM4T", "WASM", "Blender", "Salesforce", "WhisperX"
+          ],
+          "ignorePaths": [
+            "node_modules/**",
+            ".git/**",
+            "*.log",
+            "package-lock.json",
+            "yarn.lock"
+          ],
+          "ignoreRegExpList": [
+            "/https?:\\/\\/[^\\s)]+/g",
+            "/`[^`]*`/g",
+            "/\\[[^\\]]*\\]\\([^)]*\\)/g"
+          ]
+        }
+        EOF
+
+    - name: Run cspell
+      if: steps.changed-files.outputs.skip != 'true'
+      uses: streetsidesoftware/cspell-action@v6
+      with:
+        config: 'cspell.json'
+        files: |
+          **/*.md
+          **/*.rst
+          **/*.txt
+        incremental_files_only: true
+        strict: false
